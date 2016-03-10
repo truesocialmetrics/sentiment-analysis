@@ -21,7 +21,7 @@ interface AnalyzerInterface
     /**
      * Get token validator instance.
      *
-     * @return \SentimentAnalysis\Contracts\TokeniValidatorInterface
+     * @return \SentimentAnalysis\Contracts\TokenValidatorInterface
      */
     public function tokenValidator();
 
@@ -32,4 +32,11 @@ interface AnalyzerInterface
      * @return \SentimentAnalysis\Contracts\ResultInterface
      */
     public function analyze($document);
+
+    /**
+     * Create analyzer instance with default configuration.
+     *
+     * @return \SentimentAnalysis\Contracts\AnalyzerInterface
+     */
+    public static function withDefaultConfig();
 }

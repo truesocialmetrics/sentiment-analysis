@@ -23,7 +23,7 @@ class TokenValidator implements TokenValidatorInterface
      * @param  array  $ignoredWords
      * @return boolean
      */
-    public function shouldBeCalculated($token, $ignoredWords = [])
+    public function shouldBeCalculated($token, array $ignoredWords = [])
     {
         if (! $this->hasValidLength($token)) {
             return false;

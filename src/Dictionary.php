@@ -57,7 +57,7 @@ class Dictionary implements DictionaryInterface
     {
         $this->dataDirectory = $dataDirectory;
 
-        $this->loadWordsFromDirectory($dataDirectory);
+        $this->loadWordsForAllCategories($dataDirectory);
     }
 
     /**
@@ -78,11 +78,11 @@ class Dictionary implements DictionaryInterface
      */
     public function loadWordsForAllCategories($dataDirectory)
     {
-        $this->positiveWords = $this->wordsForCategory($dataDirectory, 'positive');
-        $this->negativeWords = $this->wordsForCategory($dataDirectory, 'negative');
-        $this->neutralWords = $this->wordsForCategory($dataDirectory, 'neutral');
-        $this->negationWords = $this->wordsForCategory($dataDirectory, 'negation');
-        $this->ignoredWords = $this->wordsForCategory($dataDirectory, 'ignored');
+        $this->positiveWords = $this->loadWordsForCategory($dataDirectory, 'positive');
+        $this->negativeWords = $this->loadWordsForCategory($dataDirectory, 'negative');
+        $this->neutralWords = $this->loadWordsForCategory($dataDirectory, 'neutral');
+        $this->negationWords = $this->loadWordsForCategory($dataDirectory, 'negation');
+        $this->ignoredWords = $this->loadWordsForCategory($dataDirectory, 'ignored');
 
         return $this;
     }

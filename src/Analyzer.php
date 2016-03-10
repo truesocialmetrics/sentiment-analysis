@@ -2,7 +2,6 @@
 
 namespace SentimentAnalysis;
 
-use InvalidArgumentException;
 use SentimentAnalysis\Contracts\AnalyzerInterface;
 use SentimentAnalysis\Contracts\TokenizerInterface;
 use SentimentAnalysis\Contracts\DictionaryInterface;
@@ -10,8 +9,22 @@ use SentimentAnalysis\Contracts\TokenValidatorInterface;
 
 class Analyzer implements AnalyzerInterface
 {
-    protected $categories = ['positive', 'negative', 'neutral'];
+    /**
+     * Sentiment categories.
+     *
+     * @var array
+     */
+    protected $categories = [
+        'positive',
+        'negative',
+        'neutral'
+    ];
 
+    /**
+     * Prior probalbility of each category.
+     *
+     * @var array
+     */
     protected $priorProbability = [
         'positive' => 0.333333333333,
         'negative' => 0.333333333333,
@@ -108,14 +121,26 @@ class Analyzer implements AnalyzerInterface
         return new Result($scores);
     }
 
-    public function cleanUpAndTokenizeDocument($document)
+    /**
+     * Clean up and tokenize document.
+     *
+     * @param  string $document
+     * @return array
+     */
+    protected function cleanUpAndTokenizeDocument($document)
     {
         $document = $this->removeWhiteSpaceAfterNegationWords($document);
 
         return $this->tokenizer()->tokenize($document);
     }
 
-    public function removeWhiteSpaceAfterNegationWords($document)
+    /**
+     * Remove white space after negation words.
+     *
+     * @param  string $document
+     * @return string
+     */
+    protected function removeWhiteSpaceAfterNegationWords($document)
     {
         foreach ($this->dictionary()->negationWords() as $negationWord) {
             if (strpos($document, $negationWord) !== false) {
@@ -126,7 +151,14 @@ class Analyzer implements AnalyzerInterface
         return $document;
     }
 
-    public function calculateTokensScore(array $tokens, $category)
+    /**
+     * Calculate tokens score.
+     *
+     * @param  array  $tokens
+     * @param  string $category
+     * @return float
+     */
+    protected function calculateTokensScore(array $tokens, $category)
     {
         $score = 1;
 
@@ -143,7 +175,13 @@ class Analyzer implements AnalyzerInterface
         return $score * $this->priorProbability[$category];
     }
 
-    public function shouldTokenBeCalculated($token)
+    /**
+     * Check whether token should be calculated or not.
+     *
+     * @param  string $token
+     * @return boolean
+     */
+    protected function shouldTokenBeCalculated($token)
     {
         return $this->tokenValidator()->shouldBeCalculated(
             $token,
@@ -151,19 +189,46 @@ class Analyzer implements AnalyzerInterface
         );
     }
 
-    public function isTokenFoundOnCategory($token, $category)
+    /**
+     * Check whether token is found on the given dictionary category.
+     *
+     * @param  string  $token
+     * @param  string  $category
+     * @return boolean
+     */
+    protected function isTokenFoundOnCategory($token, $category)
     {
         return $this->dictionary()->isWordFoundOnCategory($token, $category);
     }
 
-    public function normalizeScoreValues(array $scores)
+    /**
+     * Normalize score values.
+     *
+     * @param  array  $scores
+     * @return array
+     */
+    protected function normalizeScoreValues(array $scores)
     {
         $totalScore = array_sum($scores);
 
-        foreach ($this->classes as $class) {
-            $scores[$class] = round($scores[$class] / $totalScore, 3, 10);
+        foreach ($this->categories as $category) {
+            $scores[$category] = round($scores[$category] / $totalScore, 3, 10);
         }
 
         return $scores;
+    }
+
+    /**
+     * Create analyzer instance with default configuration.
+     *
+     * @return \SentimentAnalysis\Contracts\AnalyzerInterface
+     */
+    public static function withDefaultConfig()
+    {
+        return new static(
+            new Dictionary(__DIR__ . '/data'),
+            new Tokenizer,
+            new TokenValidator
+        );
     }
 }
