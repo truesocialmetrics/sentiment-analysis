@@ -28,7 +28,8 @@ interface AnalyzerInterface
     /**
      * Analyze document.
      *
-     * @param  string $document
+     * @param string $document
+     *
      * @return \SentimentAnalysis\Contracts\ResultInterface
      */
     public function analyze($document);

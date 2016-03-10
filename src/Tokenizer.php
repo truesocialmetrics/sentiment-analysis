@@ -9,7 +9,8 @@ class Tokenizer implements TokenizerInterface
     /**
      * Tokenize document.
      *
-     * @param  string $document
+     * @param string $document
+     *
      * @return array
      */
     public function tokenize($document)

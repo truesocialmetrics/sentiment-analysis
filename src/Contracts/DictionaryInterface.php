@@ -14,7 +14,8 @@ interface DictionaryInterface
     /**
      * Load all words for all categories.
      *
-     * @param  string $dataDirectory
+     * @param string $dataDirectory
+     *
      * @return \SentimentAnalysis\Contracts\DictionaryInterface
      */
     public function loadWordsForAllCategories($dataDirectory);
@@ -57,9 +58,10 @@ interface DictionaryInterface
     /**
      * Check whether word is found on the given category.
      *
-     * @param  string  $word
-     * @param  string  $category
-     * @return boolean
+     * @param string $word
+     * @param string $category
+     *
+     * @return bool
      */
     public function isWordFoundOnCategory($word, $category);
 }

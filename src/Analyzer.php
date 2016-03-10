@@ -17,7 +17,7 @@ class Analyzer implements AnalyzerInterface
     protected $categories = [
         'positive',
         'negative',
-        'neutral'
+        'neutral',
     ];
 
     /**
@@ -34,14 +34,14 @@ class Analyzer implements AnalyzerInterface
     /**
      * Dictionary instance.
      *
-     * @var \SentimentAnalysis\Contracts\DictionaryInterface $dictionary
+     * @var \SentimentAnalysis\Contracts\DictionaryInterface
      */
     protected $dictionary;
 
     /**
      * Tokenizer instance.
      *
-     * @var \SentimentAnalysis\Contracts\TokenizerInterface $tokenizer
+     * @var \SentimentAnalysis\Contracts\TokenizerInterface
      */
     protected $tokenizer;
 
@@ -55,16 +55,15 @@ class Analyzer implements AnalyzerInterface
     /**
      * Create a new instance of Analyzer class.
      *
-     * @param \SentimentAnalysis\Contracts\DictionaryInterface $dictionary
-     * @param \SentimentAnalysis\Contracts\TokenizerInterface $tokenizer
+     * @param \SentimentAnalysis\Contracts\DictionaryInterface     $dictionary
+     * @param \SentimentAnalysis\Contracts\TokenizerInterface      $tokenizer
      * @param \SentimentAnalysis\Contracts\TokenValidatorInterface $tokenValidator
      */
     public function __construct(
         DictionaryInterface $dictionary,
         TokenizerInterface $tokenizer,
         TokenValidatorInterface $tokenValidator
-    )
-    {
+    ) {
         $this->dictionary = $dictionary;
         $this->tokenizer = $tokenizer;
         $this->tokenValidator = $tokenValidator;
@@ -103,7 +102,8 @@ class Analyzer implements AnalyzerInterface
     /**
      * Analyze document.
      *
-     * @param  string $document
+     * @param string $document
+     *
      * @return \SentimentAnalysis\Contracts\ResultInterface
      */
     public function analyze($document)
@@ -124,7 +124,8 @@ class Analyzer implements AnalyzerInterface
     /**
      * Clean up and tokenize document.
      *
-     * @param  string $document
+     * @param string $document
+     *
      * @return array
      */
     protected function cleanUpAndTokenizeDocument($document)
@@ -137,7 +138,8 @@ class Analyzer implements AnalyzerInterface
     /**
      * Remove white space after negation words.
      *
-     * @param  string $document
+     * @param string $document
+     *
      * @return string
      */
     protected function removeWhiteSpaceAfterNegationWords($document)
@@ -154,8 +156,9 @@ class Analyzer implements AnalyzerInterface
     /**
      * Calculate tokens score.
      *
-     * @param  array  $tokens
-     * @param  string $category
+     * @param array  $tokens
+     * @param string $category
+     *
      * @return float
      */
     protected function calculateTokensScore(array $tokens, $category)
@@ -163,7 +166,7 @@ class Analyzer implements AnalyzerInterface
         $score = 1;
 
         foreach ($tokens as $token) {
-            if (! $this->shouldTokenBeCalculated($token)) {
+            if (!$this->shouldTokenBeCalculated($token)) {
                 continue;
             }
 
@@ -178,8 +181,9 @@ class Analyzer implements AnalyzerInterface
     /**
      * Check whether token should be calculated or not.
      *
-     * @param  string $token
-     * @return boolean
+     * @param string $token
+     *
+     * @return bool
      */
     protected function shouldTokenBeCalculated($token)
     {
@@ -192,9 +196,10 @@ class Analyzer implements AnalyzerInterface
     /**
      * Check whether token is found on the given dictionary category.
      *
-     * @param  string  $token
-     * @param  string  $category
-     * @return boolean
+     * @param string $token
+     * @param string $category
+     *
+     * @return bool
      */
     protected function isTokenFoundOnCategory($token, $category)
     {
@@ -204,7 +209,8 @@ class Analyzer implements AnalyzerInterface
     /**
      * Normalize score values.
      *
-     * @param  array  $scores
+     * @param array $scores
+     *
      * @return array
      */
     protected function normalizeScoreValues(array $scores)
@@ -226,9 +232,9 @@ class Analyzer implements AnalyzerInterface
     public static function withDefaultConfig()
     {
         return new static(
-            new Dictionary(__DIR__ . '/data'),
-            new Tokenizer,
-            new TokenValidator
+            new Dictionary(__DIR__.'/data'),
+            new Tokenizer(),
+            new TokenValidator()
         );
     }
 }

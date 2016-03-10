@@ -19,24 +19,26 @@ class TokenValidator implements TokenValidatorInterface
     /**
      * Determine whether token should be calculated or note.
      *
-     * @param  string $token
-     * @param  array  $ignoredWords
-     * @return boolean
+     * @param string $token
+     * @param array  $ignoredWords
+     *
+     * @return bool
      */
     public function shouldBeCalculated($token, array $ignoredWords = [])
     {
-        if (! $this->hasValidLength($token)) {
+        if (!$this->hasValidLength($token)) {
             return false;
         }
 
-        return ! $this->isOnIgnoredWords($token, $ignoredWords);
+        return !$this->isOnIgnoredWords($token, $ignoredWords);
     }
 
     /**
      * Determine whether token has a valid length.
      *
-     * @param  string  $token
-     * @return boolean
+     * @param string $token
+     *
+     * @return bool
      */
     public function hasValidLength($token)
     {
@@ -48,9 +50,10 @@ class TokenValidator implements TokenValidatorInterface
     /**
      * Check whether token is listed on the ignored words.
      *
-     * @param  string $token
-     * @param  array  $ignoredWords
-     * @return boolean
+     * @param string $token
+     * @param array  $ignoredWords
+     *
+     * @return bool
      */
     public function isOnIgnoredWords($token, array $ignoredWords = [])
     {

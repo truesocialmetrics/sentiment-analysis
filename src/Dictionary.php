@@ -73,7 +73,8 @@ class Dictionary implements DictionaryInterface
     /**
      * Load all words for all categories.
      *
-     * @param  string $dataDirectory
+     * @param string $dataDirectory
+     *
      * @return \SentimentAnalysis\Contracts\DictionaryInterface
      */
     public function loadWordsForAllCategories($dataDirectory)
@@ -90,15 +91,16 @@ class Dictionary implements DictionaryInterface
     /**
      * Load words for a given category.
      *
-     * @param  string $dataDirectory
-     * @param  string $category
+     * @param string $dataDirectory
+     * @param string $category
+     *
      * @return array
      */
     public function loadWordsForCategory($dataDirectory, $category)
     {
         $words = require "{$dataDirectory}/{$category}.php";
 
-        $words = array_map(function($word) {
+        $words = array_map(function ($word) {
             return trim($word);
         }, $words);
 
@@ -158,9 +160,10 @@ class Dictionary implements DictionaryInterface
     /**
      * Check whether word is found on the given category.
      *
-     * @param  string  $word
-     * @param  string  $category
-     * @return boolean
+     * @param string $word
+     * @param string $category
+     *
+     * @return bool
      */
     public function isWordFoundOnCategory($word, $category)
     {
