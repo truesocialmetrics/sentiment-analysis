@@ -2,4 +2,3 @@ build
 composer.lock
 vendor
 .php_cs.cache
-index.php
