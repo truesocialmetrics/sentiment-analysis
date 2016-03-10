@@ -6,29 +6,10 @@ use InvalidArgumentException;
 use SentimentAnalysis\Contracts\AnalyzerInterface;
 use SentimentAnalysis\Contracts\TokenizerInterface;
 use SentimentAnalysis\Contracts\DictionaryInterface;
+use SentimentAnalysis\Contracts\TokenValidatorInterface;
 
 class Analyzer implements AnalyzerInterface
 {
-    /**
-     * Invalid dictionary exception message.
-     */
-    const ERROR_INVALID_DICTIONARY = 'The $dictionary argument must implement %s.';
-
-    /**
-     * Invalid tokenizer exception message.
-     */
-    const ERROR_INVALID_TOKENIZER = 'The $tokenizer argument must implement %s.';
-
-    /**
-     * Minimum token length to calculate.
-     */
-    const MIN_TOKEN_LENGTH = 1;
-
-    /**
-     * Maximum token length to calculate.
-     */
-    const MAX_TOKEN_LENGTH = 15;
-
     protected $categories = ['positive', 'negative', 'neutral'];
 
     protected $priorProbability = [
@@ -52,30 +33,28 @@ class Analyzer implements AnalyzerInterface
     protected $tokenizer;
 
     /**
+     * Token validator instance.
+     *
+     * @var \SentimentAnalysis\Contracts\TokenValidatorInterface
+     */
+    protected $tokenValidator;
+
+    /**
      * Create a new instance of Analyzer class.
      *
-     * @param \SentimentAnalysis\Contracts\TokenizerInterface|null $tokenizer
+     * @param \SentimentAnalysis\Contracts\DictionaryInterface $dictionary
+     * @param \SentimentAnalysis\Contracts\TokenizerInterface $tokenizer
+     * @param \SentimentAnalysis\Contracts\TokenValidatorInterface $tokenValidator
      */
-    public function __construct($dictionary = null, $tokenizer = null)
+    public function __construct(
+        DictionaryInterface $dictionary,
+        TokenizerInterface $tokenizer,
+        TokenValidatorInterface $tokenValidator
+    )
     {
-        if (is_null($dictionary)) {
-            $dictionary = new Dictionary(__DIR__ . '/data');
-        }
-
-        if (! $dictionary instanceof DictionaryInterface) {
-            throw new InvalidArgumentException(sprintf(self::ERROR_INVALID_DICTIONARY, DictionaryInterface::class));
-        }
-
-        if (is_null($tokenizer)) {
-            $tokenizer = new Tokenizer;
-        }
-
-        if (! $tokenizer instanceof TokenizerInterface) {
-            throw new InvalidArgumentException(sprintf(self::ERROR_INVALID_TOKENIZER, TokenizerInterface::class));
-        }
-
         $this->dictionary = $dictionary;
         $this->tokenizer = $tokenizer;
+        $this->tokenValidator = $tokenValidator;
     }
 
     /**
@@ -96,6 +75,16 @@ class Analyzer implements AnalyzerInterface
     public function tokenizer()
     {
         return $this->tokenizer;
+    }
+
+    /**
+     * Get token validator instance.
+     *
+     * @return \SentimentAnalysis\Contracts\TokenValidatorInterface
+     */
+    public function tokenValidator()
+    {
+        return $this->tokenValidator;
     }
 
     /**
@@ -142,7 +131,7 @@ class Analyzer implements AnalyzerInterface
         $score = 1;
 
         foreach ($tokens as $token) {
-            if (! $this->isValidToken($token)) {
+            if (! $this->shouldTokenBeCalculated($token)) {
                 continue;
             }
 
@@ -156,24 +145,10 @@ class Analyzer implements AnalyzerInterface
 
     public function shouldTokenBeCalculated($token)
     {
-        if (strlen($token) < self::MIN_TOKEN_LENGTH) {
-            return false;
-        }
-
-        if (strlen($token) > self::MAX_TOKEN_LENGTH) {
-            return false;
-        }
-
-        return ! in_array($token, $this->ignoreList);
-    }
-
-    public function getDictionaryValue($token, $class)
-    {
-        if (! isset($this->dictionary[$token][$class])) {
-            return 0;
-        }
-
-        return $this->dictionary[$token][$class];
+        return $this->tokenValidator()->shouldBeCalculated(
+            $token,
+            $this->dictionary()->ignoredWords()
+        );
     }
 
     public function normalizeScoreValues(array $scores)

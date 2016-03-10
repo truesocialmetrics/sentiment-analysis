@@ -19,6 +19,13 @@ interface AnalyzerInterface
     public function tokenizer();
 
     /**
+     * Get token validator instance.
+     *
+     * @return \SentimentAnalysis\Contracts\TokeniValidatorInterface
+     */
+    public function tokenValidator();
+
+    /**
      * Analyze document.
      *
      * @param  string $document
