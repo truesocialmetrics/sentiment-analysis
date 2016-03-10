@@ -19,13 +19,13 @@ class ResultTest extends PHPUnit_Framework_TestCase
     }
 
     /** @test */
-    function result_has_scores_method()
+    function it_can_retrieve_scores()
     {
         $this->assertEquals($this->scores, $this->result->scores());
     }
 
     /** @test */
-    function result_has_category_method()
+    function it_can_retrieve_category()
     {
         $this->assertEquals('neutral', $this->result->category());
     }
