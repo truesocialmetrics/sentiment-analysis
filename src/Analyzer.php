@@ -2,7 +2,11 @@
 
 namespace SentimentAnalysis;
 
-class Analyzer
+use InvalidArgumentException;
+use SentimentAnalysis\Contracts\AnalyzerInterface;
+use SentimentAnalysis\Contracts\TokenizerInterface;
+
+class Analyzer implements AnalyzerInterface
 {
     public $classes = ['positive', 'negative', 'neutral'];
 
@@ -22,8 +26,32 @@ class Analyzer
 
     public $maxTokenLength = 15;
 
-    public function __construct()
+    /**
+     * Tokenizer insance.
+     *
+     * @var \SentimentAnalysis\Contracts\TokenizerInterface $tokenizer
+     */
+    protected $tokenizer;
+
+    /**
+     * Create a new instance of Analyzer class.
+     *
+     * @param \SentimentAnalysis\Contracts\TokenizerInterface|null $tokenizer
+     */
+    public function __construct($tokenizer = null)
     {
+        if (is_null($tokenizer)) {
+            $tokenizer = new Tokenizer;
+        }
+
+        if (! $tokenizer instanceof TokenizerInterface) {
+            throw new InvalidArgumentException(sprintf(
+                'The $tokenizer argument must implement %s.', TokenizerInterface::class
+            ));
+        }
+
+        $this->tokenizer = $tokenizer;
+
         $this->setup();
     }
 
@@ -36,20 +64,34 @@ class Analyzer
         $this->negationList = $this->loadWordsForList('negation');
     }
 
-    public function classify($document)
+    /**
+     * Get tokenizer instance.
+     *
+     * @return \SentimentAnalysis\Contracts\TokenizerInterface
+     */
+    public function tokenizer()
+    {
+        return $this->tokenizer;
+    }
+
+    /**
+     * Analyze document.
+     *
+     * @param  string $document
+     * @return \SentimentAnalysis\Contracts\ResultInterface
+     */
+    public function analyze($document)
     {
         $scores = $this->scores($document);
 
-        arsort($scores);
-
-        return key($scores);
+        return new Result($scores);
     }
 
     public function scores($document)
     {
         $document = $this->removeSpaceAfterNegationWords($document);
 
-        $tokens = $this->tokenize($document);
+        $tokens = $this->tokenizer()->tokenize($document);
 
         $scores = [];
 
@@ -119,13 +161,6 @@ class Analyzer
         }
 
         return $document;
-    }
-
-    public function tokenize($document)
-    {
-        $document = str_replace("\r\n", ' ', $document);
-
-        return explode(' ', strtolower($document));
     }
 
     public function loadAllClassesDictionary()
