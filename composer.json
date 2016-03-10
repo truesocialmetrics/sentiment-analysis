@@ -1,8 +1,7 @@
 {
-	"autoload": {
-	 	"psr-4": {
-	    	"SentimentAnalysis\\": "src/"
-		}
-	},
-	"require": {}
+  "autoload": {
+    "psr-4": {
+        "SentimentAnalysis\\": "src/"
+    }
+  }
 }

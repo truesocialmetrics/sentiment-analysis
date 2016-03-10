@@ -36,20 +36,20 @@ class Analyzer
         $this->negationList = $this->loadWordsForList('negation');
     }
 
-    public function classify($sentence)
+    public function classify($document)
     {
-        $scores = $this->scores($sentence);
+        $scores = $this->scores($document);
 
         arsort($scores);
 
         return key($scores);
     }
 
-    public function scores($sentence)
+    public function scores($document)
     {
-        $sentence = $this->removeSpaceFromNegationWords($sentence);
+        $document = $this->removeSpaceAfterNegationWords($document);
 
-        $tokens = $this->tokenize($sentence);
+        $tokens = $this->tokenize($document);
 
         $scores = [];
 
@@ -60,7 +60,7 @@ class Analyzer
         return $this->normalizeScoreValues($scores);
     }
 
-    public function tokensScore($tokens, $class)
+    public function tokensScore(array $tokens, $class)
     {
         $score = 1;
 
@@ -77,7 +77,7 @@ class Analyzer
         return $score * $this->priorProbability[$class];
     }
 
-    public function normalizeScoreValues($scores)
+    public function normalizeScoreValues(array $scores)
     {
         $totalScore = array_sum($scores);
 
@@ -110,22 +110,22 @@ class Analyzer
         return $this->dictionary[$token][$class];
     }
 
-    public function removeSpaceFromNegationWords($sentence)
+    public function removeSpaceAfterNegationWords($document)
     {
         foreach ($this->negationList as $negationWord) {
-            if (strpos($sentence, $negationWord) !== false) {
-                $sentence = str_replace("{$negationWord} ", $negationWord, $sentence);
+            if (strpos($document, $negationWord) !== false) {
+                $document = str_replace("{$negationWord} ", $negationWord, $document);
             }
         }
 
-        return $sentence;
+        return $document;
     }
 
-    public function tokenize($sentence)
+    public function tokenize($document)
     {
-        $sentence = str_replace("\r\n", ' ', $sentence);
+        $document = str_replace("\r\n", ' ', $document);
 
-        return explode(' ', strtolower($sentence));
+        return explode(' ', strtolower($document));
     }
 
     public function loadAllClassesDictionary()
