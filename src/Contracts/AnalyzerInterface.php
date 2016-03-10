@@ -5,6 +5,13 @@ namespace SentimentAnalysis\Contracts;
 interface AnalyzerInterface
 {
     /**
+     * Get dictionary instance.
+     *
+     * @return \SentimentAnalysis\Contracts\DictionaryInterface
+     */
+    public function dictionary();
+
+    /**
      * Get tokenizer instance.
      *
      * @return \SentimentAnalysis\Contracts\TokenizerInterface

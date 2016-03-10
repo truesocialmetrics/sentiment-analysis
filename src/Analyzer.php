@@ -5,29 +5,47 @@ namespace SentimentAnalysis;
 use InvalidArgumentException;
 use SentimentAnalysis\Contracts\AnalyzerInterface;
 use SentimentAnalysis\Contracts\TokenizerInterface;
+use SentimentAnalysis\Contracts\DictionaryInterface;
 
 class Analyzer implements AnalyzerInterface
 {
-    public $classes = ['positive', 'negative', 'neutral'];
+    /**
+     * Invalid dictionary exception message.
+     */
+    const ERROR_INVALID_DICTIONARY = 'The $dictionary argument must implement %s.';
 
-    public $dictionary = [];
+    /**
+     * Invalid tokenizer exception message.
+     */
+    const ERROR_INVALID_TOKENIZER = 'The $tokenizer argument must implement %s.';
 
-    public $ignoreList = [];
+    /**
+     * Minimum token length to calculate.
+     */
+    const MIN_TOKEN_LENGTH = 1;
 
-    public $negationList = [];
+    /**
+     * Maximum token length to calculate.
+     */
+    const MAX_TOKEN_LENGTH = 15;
 
-    public $priorProbability = [
+    protected $categories = ['positive', 'negative', 'neutral'];
+
+    protected $priorProbability = [
         'positive' => 0.333333333333,
         'negative' => 0.333333333333,
         'neutral' => 0.333333333334,
     ];
 
-    public $minTokenLength = 1;
-
-    public $maxTokenLength = 15;
+    /**
+     * Dictionary instance.
+     *
+     * @var \SentimentAnalysis\Contracts\DictionaryInterface $dictionary
+     */
+    protected $dictionary;
 
     /**
-     * Tokenizer insance.
+     * Tokenizer instance.
      *
      * @var \SentimentAnalysis\Contracts\TokenizerInterface $tokenizer
      */
@@ -38,30 +56,36 @@ class Analyzer implements AnalyzerInterface
      *
      * @param \SentimentAnalysis\Contracts\TokenizerInterface|null $tokenizer
      */
-    public function __construct($tokenizer = null)
+    public function __construct($dictionary = null, $tokenizer = null)
     {
+        if (is_null($dictionary)) {
+            $dictionary = new Dictionary(__DIR__ . '/data');
+        }
+
+        if (! $dictionary instanceof DictionaryInterface) {
+            throw new InvalidArgumentException(sprintf(self::ERROR_INVALID_DICTIONARY, DictionaryInterface::class));
+        }
+
         if (is_null($tokenizer)) {
             $tokenizer = new Tokenizer;
         }
 
         if (! $tokenizer instanceof TokenizerInterface) {
-            throw new InvalidArgumentException(sprintf(
-                'The $tokenizer argument must implement %s.', TokenizerInterface::class
-            ));
+            throw new InvalidArgumentException(sprintf(self::ERROR_INVALID_TOKENIZER, TokenizerInterface::class));
         }
 
+        $this->dictionary = $dictionary;
         $this->tokenizer = $tokenizer;
-
-        $this->setup();
     }
 
-    public function setup()
+    /**
+     * Get dictionary instance.
+     *
+     * @return \SentimentAnalysis\Contracts\DictionaryInterface
+     */
+    public function dictionary()
     {
-        $this->loadAllClassesDictionary();
-
-        $this->ignoreList = $this->loadWordsForList('ignore');
-
-        $this->negationList = $this->loadWordsForList('negation');
+        return $this->dictionary;
     }
 
     /**
@@ -82,27 +106,38 @@ class Analyzer implements AnalyzerInterface
      */
     public function analyze($document)
     {
-        $scores = $this->scores($document);
+        $tokens = $this->cleanUpAndTokenizeDocument($document);
+
+        $scores = [];
+
+        foreach ($this->categories as $category) {
+            $scores[$category] = $this->calculateTokensScore($tokens, $category);
+        }
+
+        $scores = $this->normalizeScoreValues($scores);
 
         return new Result($scores);
     }
 
-    public function scores($document)
+    public function cleanUpAndTokenizeDocument($document)
     {
-        $document = $this->removeSpaceAfterNegationWords($document);
+        $document = $this->removeWhiteSpaceAfterNegationWords($document);
 
-        $tokens = $this->tokenizer()->tokenize($document);
-
-        $scores = [];
-
-        foreach ($this->classes as $class) {
-            $scores[$class] = $this->tokensScore($tokens, $class);
-        }
-
-        return $this->normalizeScoreValues($scores);
+        return $this->tokenizer()->tokenize($document);
     }
 
-    public function tokensScore(array $tokens, $class)
+    public function removeWhiteSpaceAfterNegationWords($document)
+    {
+        foreach ($this->dictionary()->negationWords() as $negationWord) {
+            if (strpos($document, $negationWord) !== false) {
+                $document = str_replace("{$negationWord} ", $negationWord, $document);
+            }
+        }
+
+        return $document;
+    }
+
+    public function calculateTokensScore(array $tokens, $category)
     {
         $score = 1;
 
@@ -119,24 +154,13 @@ class Analyzer implements AnalyzerInterface
         return $score * $this->priorProbability[$class];
     }
 
-    public function normalizeScoreValues(array $scores)
+    public function shouldTokenBeCalculated($token)
     {
-        $totalScore = array_sum($scores);
-
-        foreach ($this->classes as $class) {
-            $scores[$class] = round($scores[$class] / $totalScore, 3, 10);
-        }
-
-        return $scores;
-    }
-
-    public function isValidToken($token)
-    {
-        if (strlen($token) < $this->minTokenLength) {
+        if (strlen($token) < self::MIN_TOKEN_LENGTH) {
             return false;
         }
 
-        if (strlen($token) > $this->maxTokenLength) {
+        if (strlen($token) > self::MAX_TOKEN_LENGTH) {
             return false;
         }
 
@@ -152,48 +176,14 @@ class Analyzer implements AnalyzerInterface
         return $this->dictionary[$token][$class];
     }
 
-    public function removeSpaceAfterNegationWords($document)
+    public function normalizeScoreValues(array $scores)
     {
-        foreach ($this->negationList as $negationWord) {
-            if (strpos($document, $negationWord) !== false) {
-                $document = str_replace("{$negationWord} ", $negationWord, $document);
-            }
-        }
+        $totalScore = array_sum($scores);
 
-        return $document;
-    }
-
-    public function loadAllClassesDictionary()
-    {
         foreach ($this->classes as $class) {
-            $this->loadDictionaryFor($class);
+            $scores[$class] = round($scores[$class] / $totalScore, 3, 10);
         }
-    }
 
-    public function loadDictionaryFor($class)
-    {
-        $words = $this->loadWordsFor($class);
-
-        foreach ($words as $word) {
-            $word = trim($word);
-
-            if (! isset($this->dictionary[$word][$class])) {
-                $this->dictionary[$word][$class] = 1;
-            }
-        }
-    }
-
-    public function loadWordsFor($class)
-    {
-        return require __DIR__ . "/data/{$class}.php";
-    }
-
-    public function loadWordsForList($list)
-    {
-        $words = $this->loadWordsFor($list);
-
-        return array_map(function($word) {
-            return stripcslashes(trim($word));
-        }, $words);
+        return $scores;
     }
 }
