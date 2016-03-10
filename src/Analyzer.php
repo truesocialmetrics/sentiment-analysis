@@ -135,12 +135,12 @@ class Analyzer implements AnalyzerInterface
                 continue;
             }
 
-            $count = $this->getDictionaryValue($token, $class);
+            $count = $this->isTokenFoundOnCategory($token, $category) ? 1 : 0;
 
             $score *= ($count + 1);
         }
 
-        return $score * $this->priorProbability[$class];
+        return $score * $this->priorProbability[$category];
     }
 
     public function shouldTokenBeCalculated($token)
@@ -149,6 +149,11 @@ class Analyzer implements AnalyzerInterface
             $token,
             $this->dictionary()->ignoredWords()
         );
+    }
+
+    public function isTokenFoundOnCategory($token, $category)
+    {
+        return $this->dictionary()->isWordFoundOnCategory($token, $category);
     }
 
     public function normalizeScoreValues(array $scores)

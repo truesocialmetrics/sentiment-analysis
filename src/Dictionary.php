@@ -154,4 +154,18 @@ class Dictionary implements DictionaryInterface
     {
         return $this->ignoredWords;
     }
+
+    /**
+     * Check whether word is found on the given category.
+     *
+     * @param  string  $word
+     * @param  string  $category
+     * @return boolean
+     */
+    public function isWordFoundOnCategory($word, $category)
+    {
+        $categoryWords = "{$category}Words";
+
+        return in_array($word, $this->{$categoryWords});
+    }
 }
