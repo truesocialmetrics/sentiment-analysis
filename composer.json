@@ -1,9 +1,9 @@
 {
-  "name": "risan/sentiment-analysis",
+  "name": "truesocialmetrics/sentiment-analysis",
   "type": "library",
   "description": "Sentiment analysis library for PHP.",
   "keywords": ["sentiment", "analysis", "opinion", "mining"],
-  "homepage": "https://github.com/risan/sentiment-analysis",
+  "homepage": "https://github.com/truesocialmetrics/sentiment-analysis",
   "license": "MIT",
   "authors": [
     {
